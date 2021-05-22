@@ -102,13 +102,19 @@ clean <- survey %>%
                           "United States of america" = "US",
                           "United States of America" = "US",
                           "United States Of America" = "US",
+                          "america" = "US",
+                          "America" = "US",
+                          "California" = "US",
+                          "For the United States government, but posted overseas" = "US",
+                          "I work for an US based company but I'm from Argentina." = "US",
+                          "Japan, US Gov position" = "US",
+                          "US govt employee overseas, country withheld" = "US",
                           ),
          highest_level_of_education_completed = recode(highest_level_of_education_completed,
                                                        "Master's degree" = "MA degree",
                                                        "NA" = "Other"),
          gender = ifelse(gender %ni% c("Woman", "Man", "Non-binary"), "Prefer Not to Answer/Other", gender))
                                                        
-
 #let's look just at education & salary in the US
 ##remove NA entries
 US <- clean %>%
