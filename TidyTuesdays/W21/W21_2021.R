@@ -1,4 +1,5 @@
 #setup
+library(tidyverse)
 library(tidyr)
 library(tidytuesdayR)
 library(skimr)
@@ -13,7 +14,10 @@ tt_data <- tt_load(2021, week=21)
 
 survey <- tt_data$survey
 
-#clean for easier use
+#what are all of the different country answers? (Thank you to Chris Nemarich for catching this)
+survey$country %>% unique() %>% sort()
+
+#clean for all the different ways US is submitted
 clean <- survey %>%
   mutate(country = recode(country, 
                           "USA" = "US",
@@ -26,15 +30,84 @@ clean <- survey %>%
                           "united states" = "US",
                           'United States' = 'US',
                           "United States of America" = "US",
-                          "England" = "UK",
-                          "UK" = "UK",
-                          "Uk" = "UK"),
+                          "United Sates" = "US",
+                          "United Sates of America" = "US",
+                          "United Stares" = "US",
+                          "United State" = "US",
+                          "United State of America" = "US",
+                          "United Statea" = "US",
+                          "united stated" = "US",
+                          "United Stated" = "US",
+                          "United Stateds" = "US",
+                          "United Statees" = "US",
+                          "united States" = "US",
+                          "United STates" = "US",
+                          "UNITED STATES" = "US",
+                          "United States- Puerto Rico" = "US",
+                          "United States (I work from home and my clients are all over the US/Canada/PR" = "US",
+                          "united states of america" = "US",
+                          "United states of america" = "US",
+                          "United states of America" = "US",
+                          "United States of America" = "US",
+                          "United States of American" = "US",
+                          "United States of Americas" = "US",
+                          "United Statesp" = "US",
+                          "United statew" = "US",
+                          "United Statss" = "US",
+                          "United Stattes" = "US",
+                          "United Statues" = "US",
+                          "United Status" = "US",
+                          "United Statws" = "US",
+                          "United Sttes" = "US",
+                          "UnitedStates" = "US",
+                          "Uniteed States" = "US",
+                          "Unitef Stated" = "US",
+                          "Uniter Statez" = "US",
+                          "Unites states" = "US",
+                          "Unites States" = "US",
+                          "Unitied States" = "US",
+                          "Uniyed states" = "US",
+                          "Uniyes States" = "US",
+                          "Unted States" = "US",
+                          "Untied States" = "US",
+                          "us" = "US",
+                          "uS" = "US",
+                          "US of A" = "US",
+                          "uSA" = "US",
+                          "UsA" = "US",
+                          "USA-- Virgin Islands" = "US",
+                          "USA (company is based in a US territory, I work remote)" = "US",
+                          "USA tomorrow" = "US",
+                          "USaa" = "US",
+                          "USAB" = "US",
+                          "Usat" = "US",
+                          "USD" = "US",
+                          "USS" = "US",
+                          "The United States" = "US",
+                          "The US" = "US",
+                          "U. S" = "US",
+                          "U. S." = "US",
+                          "U.S" = "US",
+                          "u.s." = "US",
+                          "U.s." = "US",
+                          "U.S.A" = "US",
+                          "U.s.a." = "US",
+                          "U.S.A." = "US",
+                          "U.S>" = "US",
+                          "U.SA" = "US",
+                          "Uniited States" = "US",
+                          "Unite States" = "US",
+                          "United  States" = "US",
+                          "UNited States" = "US",
+                          "United States of america" = "US",
+                          "United States of America" = "US",
+                          "United States Of America" = "US",
+                          ),
          highest_level_of_education_completed = recode(highest_level_of_education_completed,
                                                        "Master's degree" = "MA degree",
                                                        "NA" = "Other"),
          gender = ifelse(gender %ni% c("Woman", "Man", "Non-binary"), "Prefer Not to Answer/Other", gender))
                                                        
-  )
 
 #let's look just at education & salary in the US
 ##remove NA entries
