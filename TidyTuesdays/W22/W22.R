@@ -44,14 +44,14 @@ p2 <- rec %>%
   geom_rect(data=rec, aes(xmin=358, xmax=392, ymin=-Inf, ymax=Inf), fill="#e5e5e5", color = "#232229") +  
   geom_text(aes(label=diff, y=track, x=375), fontface="bold", size=4, color = "#232229", family="Segoe UI Light") + 
   geom_text(data=filter(rec, track=="Kalimari Desert"), aes(x=375, y=track, label="DIFF"),
-                     size=5, vjust=-37, fontface="bold", family="Segoe UI Light", color = "#232229") +
+                     size=5, vjust=-37.2, fontface="bold", family="Segoe UI Light", color = "#232229") +
   geom_text(data=filter(rec, track == "Yoshi Valley"),
             aes(x = Yes, y  = track, label = "Shortcut"),
             color = "#CC6677", size = 3, vjust = -2, fontface = "bold", family = "Segoe UI Light") +
   geom_text(data=filter(rec, track == "Yoshi Valley"),
             aes(x = No, y  = track, label = "No Shortcut"),
             color = "#117733", size = 3, vjust = -2, fontface = "bold", family = "Segoe UI Light") +
-  labs(x="Time") +
+  labs(x="Time(Seconds)") +
   theme(panel.grid.major  = element_blank(),
         panel.grid.minor  = element_blank(),
         axis.ticks.y      = element_blank(),
