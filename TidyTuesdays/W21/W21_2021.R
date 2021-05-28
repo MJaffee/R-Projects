@@ -7,14 +7,15 @@ library(ggplot2)
 library(extrafont)
 library(patchwork)
 library(ggridges)
-'%ni%' <- Negate('%in%') #thanks to deisygysi for this function
+"%ni%" <- Negate("%in%") #thanks to deisygysi for this function
 
 #load & organize data
 tt_data <- tt_load(2021, week=21)
 
 survey <- tt_data$survey
 
-#what are all of the different country answers? (Thank you to Chris Nemarich for catching this)
+#what are all of the different country answers? 
+#(Thank you to Chris Nemarich for catching this)
 survey$country %>% unique() %>% sort()
 
 #clean for all the different ways US is submitted
@@ -116,16 +117,16 @@ clean <- survey %>%
          gender = ifelse(gender %ni% c("Woman", "Man", "Non-binary"), "Prefer Not to Answer/Other", gender))
                                                        
 #let's look just at education & salary in the US
-##remove NA entries
+#remove NA entries
 US <- clean %>%
-  filter(country == 'US') %>%
+  filter(country == "US") %>%
   drop_na(highest_level_of_education_completed)
 
 #create color palette
 colors <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#CC79A7")
 
 #initial plot for exploration
-a <- US %>%
+a <- US %>% 
   ggplot(aes(x=annual_salary, y=highest_level_of_education_completed, fill = highest_level_of_education_completed, color = highest_level_of_education_completed)) +
   geom_density_ridges(alpha = 0.4, scale = 0.9, quantile_lines = TRUE, show.legend = FALSE, jittered_points = TRUE, position = "raincloud") +
   coord_cartesian(xlim = c(0, 350000)) + 
