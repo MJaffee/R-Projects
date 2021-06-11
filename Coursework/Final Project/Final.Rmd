@@ -1,0 +1,214 @@
+---
+title: "Final"
+author: "Justin and Marc"
+date: "4/23/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyr)
+library(tidyverse)
+library(ggplot2)
+library(ggthemes)
+```
+
+# INTRODUCTION:
+Southeast Asia is a region undergoing massive change. In order to sustain these changes immense amounts of energy will be demanded. Chinese finance has played and continues to play a large role in the development of the region's energy grid as part of the Belt & Road Initiative. Often the focus is honed in on China's investment in hydropower projects on rivers like the Mekong and Nam Ou [Beech, 2019](https://www.nytimes.com/2019/10/12/world/asia/mekong-river-dams-china.html). But China's outgoing investment in energy projects expands beyond dams.
+
+Simultaneously, ongoing research shows how much energy sectors play a role in the emissions of greenhouse gases (specifically CO2) and ultimately contribute to climate change [Center for Climate and Energy Solutions](https://www.c2es.org/content/international-emissions/). Being a region that is especially vulnerable to the effects of climate change, sustainable alternatives for Southeast Asia are something that ought to be explored. Offering sustainable alternatives is also beneficial to the globe as a 2019 report indicated that the combined CO2 emissions from all Belt & Road energy projects will far exceed Earth's reaming carbon budget [Jun and Zadek, 2019](https://www.climateworks.org/report/decarbonizing-the-belt-and-road/).
+
+This project aims to shed light on how much of China's investment in energy projects in Southeast Asia contribute to CO2 emissions that are warming the globe to supplement any multilateral engagements or further studies on cleaning the world's grid.
+
+# DATA SETS
+First we aimed to get a look at the big picture. We wanted to see 1) the historic time line of GHG emissions by sector in each country and 2) where China had invested in carbon emitting energy sources.
+
+The first data set we used was the World Resources Institute (WRI) CAIT climate change data set. This data set includes total GHG emissions from countries over time and breaks it down by sector/source. This provided us with data on how much GHG emissions are attributed to the energy sector of each country.
+
+The second data set we used was the China Global Power Database from Boston University. This data set shows China's investment in energy projects around the globe and includes the type, annual CO2 emissions, and more. This provided us with data to see how much countries' energy sector emissions could be attributed to China-backed projects.
+
+As will be seen in our process, we included data sets from the International Energy Agency (IEA) which further detailed total CO2 emissions from countries over time by sector. We decided to include both the WRI CAIT data set and IEA data sets in order to illustrate our exploratory processes.
+
+# LOADING & PREPARING DATA & EXPLORATION
+First we filtered the GHG data set to only include Southeast Asian countries
+```{r}
+ghg_world <- read.csv('C:/Users/march/Documents/Data/DA4IA/Student Folders/Justin and Marc/Data Sets/ghg_data.csv')
+ghg_sea <- ghg_world %>% filter (Country == 'Brunei'
+                           | Country == 'Cambodia'
+                           | Country == 'Indonesia'
+                           | Country == 'Laos'
+                           | Country == 'Malaysia'
+                           | Country == 'Myanmar'
+                           | Country == 'Philippines'
+                           | Country == 'Singapore'
+                           | Country == 'Thailand'
+                           | Country == 'Vietnam')
+```
+
+To get the full picture of Chinese investment in fossil fuel energy projects in Southeast Asia we filtered the China Global Power data set to only include Southeast Asian countries, fossil fuel projects, and operational projects
+```{r}
+cgpd <- read.csv('C:/Users/march/Documents/Data/DA4IA/Student Folders/Justin and Marc/Data Sets/cgpd.csv')
+sea <- cgpd %>% filter (Country == 'BRUNEI'
+                        | Country == 'CAMBODIA'
+                        | Country == 'INDONESIA'
+                        | Country == 'LAOS'
+                        | Country == 'MALAYSIA'
+                        | Country == 'MYANMAR'
+                        | Country == 'PHILIPPINES'
+                        | Country == 'SINGAPORE'
+                        | Country == 'THAILAND'
+                        | Country == 'VIETNAM')
+sea_op <- sea %>% filter (Project.Status == 'In Operation')
+sea_opco <- sea_op %>% filter(Technology == 'Oil'
+                              | Technology == 'Coal'
+                              | Technology == 'Gas')
+```
+
+Now that we had our data prepared we wanted to see if we could get a closer look at countries to determine which we should focus on for the study. 
+
+To get an idea of the emissions scenarios of each country's energy sector we plotted the data in a line chart
+```{r}
+ghg_seaplot <- ggplot(ghg_sea, aes(x=Year, y=Energy..MtCO2e., color=Country)) +
+                        geom_line() + 
+  labs(title="Southeast Asia Emissions from Energy Sector", x="Year", y="Mt CO2") + 
+  theme_pander() + scale_color_pander()
+ghg_seaplot
+```
+
+Through this chart we could determine that Indonesia, Thailand, Malaysia, Vietnam, and the Philippines were the top 5 countries in CO2 emissions from their energy sectors between 1990 and 2015. 
+
+To get an idea of which countries China had backed more fossil fuel projects in we performed a simple sum function
+```{r}
+table(sea_opco$Country)
+```
+
+Cross-referenced with the determination made from the WRI data set, we determined to focus-in on Indonesia, Malaysia, and Vietnam since they were both top-emitters in Southeast Asia as well as top countries with China-backed fossil fuel projects.
+
+Next we wanted to see how much how much the China-backed projects were contributing to countries' overall emissions from the energy sector. To start we wanted to get a look at each country's profile by again filtering our China Global Power Database down to each focus country
+```{r}
+idn_cn <- sea_opco %>% filter(Country == 'INDONESIA')
+my_cn <- sea_opco %>% filter(Country == 'MALAYSIA')
+vt_cn <- sea_opco %>% filter(Country == 'VIETNAM')
+```
+
+To get an idea of what each country's profile might look like we plotted Indonesia's profile based on the year a project became operational and how much annual CO2 it emitted
+```{r}
+idn_cnplot <- ggplot(idn_cn, aes(x=Year.of.Commission, y=Estimated.Annual.CO2.Emission.from.Power.Generation..1000.ton., color=Technology)) +
+  geom_point() +
+  labs(title='China-Backed Fossil Fuel Energy Projects in Indonesia', x='Year', y='K Ton CO2') +
+  theme_pander() + scale_color_pander()
+idn_cnplot
+```
+This plot brought two un-addressed factors to light. 1) The units for the CGPD data were in K Ton while the WRI data was in M Ton. We would want to convert the units of the CGPD data in order to accurately compare the data sets. 2) The CGPD data had a time line spanning to 2019 while the GHG stopped at 2015. We addressed these two factors as follows:
+
+1) Unit Conversion:
+```{r}
+sea_opco['Estimated.Annual.CO2.Emission.from.Power.Generation..1000.ton.'] <- sea_opco['Estimated.Annual.CO2.Emission.from.Power.Generation..1000.ton.'] / 1000
+colnames(sea_opco)[match('Estimated.Annual.CO2.Emission.from.Power.Generation..1000.ton.', colnames(sea_opco))] <- 'MtCo2'
+```
+
+Re-create country profiles & plots
+```{r}
+idn_cn <- sea_opco %>% filter(Country == 'INDONESIA')
+my_cn <- sea_opco %>% filter(Country == 'MALAYSIA')
+vt_cn <- sea_opco %>% filter(Country == 'VIETNAM')
+idn_cnplot <- ggplot(idn_cn, aes(x=as.numeric(Year.of.Commission), y=MtCo2, color=Technology)) +
+  scale_x_continuous(breaks=c(2010, 2012, 2014, 2016, 2018)) +
+  geom_point() +
+  labs(title='China-Backed Fossil Fuel Energy Projects in Indonesia', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+my_cnplot <- ggplot(my_cn, aes(x=as.numeric(Year.of.Commission), y=MtCo2, color=Technology)) +
+  geom_point() +
+  labs(title='China-Backed Fossil Fuel Energy Projects in Malaysia', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+vt_cnplot <- ggplot(vt_cn, aes(x=as.numeric(Year.of.Commission), y=MtCo2, color=Technology)) +
+  geom_point() +
+  labs(titles='China-Backed Fossil Fuel Energy Projects in Vietnam', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+```
+
+Check new profile
+```{r}
+idn_cnplot
+```
+
+2) Up-to-date data:
+In order to have the most up-to-date data we downloaded individual sets of CO2 emissions by energy source for the three countries. This data came from the International Energy Agency and helped us get a more recent picture of the CO2 scenarios in Southeast Asia. We imported the data for each country and pivoted them in order to make them easier to work with.
+```{r}
+idn_iea <- read.csv('C:/Users/march/Documents/Data/DA4IA/Student Folders/Justin and Marc/Data Sets/IDN_IEA.csv') %>%
+  pivot_longer(!Year, names_to = 'type')
+my_iea <- read.csv('C:/Users/march/Documents/Data/DA4IA/Student Folders/Justin and Marc/Data Sets/MY_IEA.csv') %>%
+  pivot_longer(!Year, names_to = 'type')
+vt_iea <- read.csv('C:/Users/march/Documents/Data/DA4IA/Student Folders/Justin and Marc/Data Sets/VT_IEA.csv') %>%
+  pivot_longer(!Year, names_to = 'type')
+```
+
+Now that all data had been obtained, organized, and adjusted, we could being to focus in on the three countries and evaluate the relationships between China-backed projects and total emissions from their energy sectors.
+
+# ANALYSIS & FINDINGS
+
+## INDONESIA
+
+```{r}
+idn_ieaplot <- ggplot(idn_iea, aes(x=Year, y=value, color=type)) +
+  geom_line() +
+  labs(title='Indonesia: CO2 emissions by energy source', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+idn_ieaplot
+idn_cnplot
+```
+The data shows China only backed coal projects in Indonesia. These projects account for approximately 225Mt Co2 annually at present. To determine how much the China-backed coal projects accounted for Indonesia's total coal energy emissions we utilized the following calculation which includes the summation of Mt Co2 that China-backed coal projects annually emit:
+```{r}
+sum(idn_cn$MtCo2) / 225 * 100
+```
+
+Findings: We found that China-backed coal projects in Indonesia account for approximately 19.2% of coal emissions from Indonesia's energy sector. In the context of Indonesia's entire energy sector this isn't a huge amount, but with more potential coal project under planning, it will be crucial to advocate for the phase-out of coal projects and increase of renewable/sustainable energy projects especially considering the already visible effects climate change is having on Indonesia [Lyons, 2019](https://www.theguardian.com/world/2019/aug/27/why-is-indonesia-moving-its-capital-city-everything-you-need-to-know)
+
+## MALAYSIA
+
+```{r}
+my_ieaplot <- ggplot(my_iea, aes(x=Year, y=value, color=type)) +
+  geom_line() +
+  labs(title='Malaysia: CO2 emissions by energy source', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+my_ieaplot
+my_cnplot
+```
+The data shows China backed coal and natural gas projects in Malaysia. Coal and natural gas projects account for approximately 150Mt Co2 annually at present. To determine how much the China-backed fossil fuel projects accounted for Malaysia's total CO2 energy emissions we utilized the same calculation which includes the summation of Mt Co2 that China-backed projects annually emit:
+
+```{r}
+sum(my_cn$MtCo2) / 150 * 100
+```
+
+Findings: We found that China-backed fossil fuel projects in Malaysia only account for approximately 9% of total energy emissions. This is a considerably low amount compared to other projects. But under construction and planned projects could add an additional 10 Mt of CO2 and the country should be supported to engage in a clean energy transition.
+
+
+## VIETNAM
+
+```{r}
+vt_ieaplot <- ggplot(vt_iea, aes(x=Year, y=value, color=type)) +
+  geom_line() +
+  labs(title='Vietnam: CO2 emissions by energy source', x='Year', y='Mt CO2') +
+  theme_pander() + scale_color_pander()
+vt_ieaplot
+vt_cnplot
+```
+The data shows China has only backed coal projects in Vietnam. Coal accounts for approximately 150Mt Co2 annually at present. To determine how much the China-backed coal projects accounted for Vietnam's total coal energy emissions we utilized the same calculation which includes the summation of Mt Co2 that China-backed coal projects annually emit:
+```{r}
+sum(vt_cn$MtCo2) / 150 * 100
+```
+
+Findings: We found that China-backed coal projects in Vietnam accounted for approximately 32.3% of total coal emissions. Considering coal is the main source of CO2 emissions in Vietnam this is a significant portion. With three coal plants in various phases of planning and construction, Chinese-backed coal projects in Vietnam could add an additional 18Mt of CO2 in the next two years. Vietnam has indicated an interest in ramping up its renewable efforts, but it will need to happen faster in order to avoid the impacts of sea level rise which contributes to the degradation of one of the country's most vital resource, the Mekong Delta. [Schmidt, 2019](https://www.scientificamerican.com/article/new-elevation-measure-shows-climate-change-could-quickly-swamp-the-mekong-delta/)
+
+# CONCLUSION
+The analysis shows that China's role in CO2 emissions in Southeast Asian energy sectors is not minute. Each year CO2 emissions from Southeast Asian countries' energy sectors are rising, in order to create a sustainable grid and avoid climate impacts, investing countries ought to be seeking cleaner solutions. China has indicated an interest in phasing out coal [Stanway and Cadell, 2021](https://www.reuters.com/world/china/chinas-xi-says-china-will-phase-down-coal-consumption-over-2026-2030-2021-04-22/), but less is known about its intensions to phase out coal in their Belt & Road Projects. Countries should be engaging multilaterally in order to increase efforts to clean energy grids globally to ensure a safe and livable planet for all.
+
+# FURTHER THOUGHTS
+Further analyses could look into how much Chinese investment is contributing to renewable projects abroad. The China Global Power Database shows a significant amount of investment in solar and wind projects. 
+```{r}
+table(cgpd$Technology)
+```
+This is a welcome sign of intention to provide clean energy abroad. Given recent developments of countries rising to take action on climate change it would be interesting to do an analysis like this one in a few years time to see the changes in project development and emissions. Further studies should also include data on US financing as well as other major countries like India. Major powers like the US, China, and India (amongst others) have a responsibility to decarbonize not just at home but abroad to the countries who will be most impacted by the effects of climate change. 
